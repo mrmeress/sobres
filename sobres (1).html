@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sobres">
+<meta name="theme-color" content="#ffffff">
+<title>Sobres</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeecea;
+    --bg-success: #eaf3de;
+    --bg-warning: #faeeda;
+    --bg-danger: #fcebeb;
+    --text: #1a1a18;
+    --text2: #6b6b68;
+    --text3: #9a9a96;
+    --text-success: #27500a;
+    --text-warning: #633806;
+    --text-danger: #791f1f;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #262624;
+      --bg3: #303030;
+      --bg-success: #173404;
+      --bg-warning: #412402;
+      --bg-danger: #501313;
+      --text: #f0ede8;
+      --text2: #a0a09a;
+      --text3: #6b6b68;
+      --text-success: #c0dd97;
+      --text-warning: #fac775;
+      --text-danger: #f09595;
+      --border: rgba(255,255,255,0.12);
+      --border2: rgba(255,255,255,0.22);
+    }
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 16px; -webkit-tap-highlight-color: transparent; }
+  button { font-family: inherit; cursor: pointer; background: transparent; border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0 14px; height: 36px; font-size: 13px; color: var(--text); transition: background 0.1s; }
+  button:hover, button:active { background: var(--bg2); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  input { font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0 10px; height: 36px; width: 100%; outline: none; }
+  input:focus { border-color: #378ADD; box-shadow: 0 0 0 2px rgba(55,138,221,0.2); }
+  .app { max-width: 480px; margin: 0 auto; padding-bottom: 80px; min-height: 100vh; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px; position: sticky; top: 0; background: var(--bg); z-index: 10; border-bottom: 0.5px solid var(--border); }
+  .topbar-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .topbar-title svg { width: 22px; height: 22px; }
+  .icon-btn { width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+  .month-nav { display: flex; align-items: center; padding: 12px 16px; gap: 8px; }
+  .month-label { flex: 1; text-align: center; font-size: 15px; font-weight: 500; }
+
+  .summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 16px 16px; }
+  .sum-card { background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; }
+  .sum-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+  .sum-val { font-size: 15px; font-weight: 600; }
+  .sum-val.danger { color: var(--text-danger); }
+  .sum-val.success { color: var(--text-success); }
+
+  .alert-bar { margin: 0 16px 12px; background: var(--bg-warning); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--text-warning); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .alert-bar button { font-size: 12px; color: var(--text-warning); border-color: var(--text-warning); }
+
+  .envelopes { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+  .envelope { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; cursor: pointer; transition: border-color 0.15s, background 0.1s; }
+  .envelope:active { background: var(--bg2); }
+  .env-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .env-name { font-size: 14px; font-weight: 500; }
+  .env-amounts { font-size: 12px; color: var(--text2); }
+  .env-amounts strong { font-weight: 600; color: var(--text); }
+  .bar-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .env-footer { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--text2); }
+  .over { color: var(--text-danger) !important; }
+
+  .detail-view { padding-bottom: 80px; }
+  .back-row { display: flex; align-items: center; gap: 6px; padding: 14px 16px 8px; cursor: pointer; color: var(--text2); font-size: 14px; }
+  .back-row:active { color: var(--text); }
+  .detail-header { padding: 0 16px 16px; }
+  .detail-name { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .detail-sub { font-size: 13px; color: var(--text2); }
+  .detail-header-row { display: flex; align-items: center; justify-content: space-between; }
+  .detail-bar-wrap { padding: 0 16px 20px; }
+  .detail-bar-track { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+  .detail-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .detail-bar-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
+
+  .add-form { margin: 0 16px 20px; background: var(--bg2); border-radius: var(--radius-lg); padding: 14px; }
+  .add-form-title { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
+  .add-row { display: flex; gap: 8px; }
+  .add-row input:first-child { flex: 1; }
+  .add-row input[type=number] { width: 95px; flex: none; }
+  .add-row button { white-space: nowrap; flex-shrink: 0; }
+
+  .txn-list { padding: 0 16px; }
+  .txn-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .txn-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .txn-item:last-child { border-bottom: none; }
+  .txn-concept { font-size: 14px; }
+  .txn-right { display: flex; align-items: center; gap: 10px; }
+  .txn-amount { font-size: 14px; font-weight: 500; }
+  .txn-del { width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text2); border: none; }
+  .txn-del:active { color: var(--text-danger); background: var(--bg-danger); }
+  .empty-state { text-align: center; padding: 32px 0; font-size: 13px; color: var(--text3); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 20px; width: 100%; max-width: 360px; }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .modal label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 4px; margin-top: 12px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .modal-actions button { flex: 1; }
+  .btn-danger { color: var(--text-danger) !important; border-color: var(--text-danger) !important; }
+
+  .rollover-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .rollover-item:last-child { border-bottom: none; }
+  .rollover-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .rollover-surplus { font-size: 12px; }
+  .rollover-btns { display: flex; gap: 6px; }
+  .rollover-btns button { font-size: 12px; padding: 0 10px; height: 32px; }
+  .btn-selected { border-color: #378ADD !important; color: #185FA5 !important; background: #e6f1fb !important; }
+  @media (prefers-color-scheme: dark) { .btn-selected { background: #042C53 !important; color: #B5D4F4 !important; border-color: #378ADD !important; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const STORAGE_KEY = 'sobres_v2';
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const DEFAULT_ENVELOPES = [
+  {id:'alimentacion', name:'Alimentación', limit:250, color:'#378ADD'},
+  {id:'viajes',       name:'Viajes BCN↔VIT', limit:120, color:'#BA7517'},
+  {id:'bares',        name:'Bares y restaurantes', limit:120, color:'#1D9E75'},
+  {id:'ocio',         name:'Ocio y cultura', limit:140, color:'#D85A30'},
+  {id:'ropa',         name:'Ropa / varios', limit:50,  color:'#D4537E'},
+];
+
+function load() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  const now = new Date();
+  return { month: now.getMonth(), year: now.getFullYear(), envelopes: DEFAULT_ENVELOPES, months: {} };
+}
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
+
+function mkey(y, m) { return `${y}-${String(m+1).padStart(2,'0')}`; }
+
+function monthData(y, m) {
+  const k = mkey(y, m);
+  if (!state.months[k]) {
+    state.months[k] = {};
+    state.envelopes.forEach(e => { state.months[k][e.id] = { transactions: [], extra: 0 }; });
+  }
+  state.envelopes.forEach(e => { if (!state.months[k][e.id]) state.months[k][e.id] = { transactions: [], extra: 0 }; });
+  return state.months[k];
+}
+
+function spent(ed) { return (ed.transactions || []).reduce((s, t) => s + t.amount, 0); }
+function fmt(n) { return (Math.round(n * 100) / 100).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; }
+function barColor(pct, baseColor) { return pct >= 100 ? '#E24B4A' : pct >= 80 ? '#BA7517' : baseColor; }
+
+let state = load();
+let view = 'main';       // main | detail | rollover
+let activeId = null;
+let editId = null;       // null | '__new__' | envId
+let rolloverChoices = {};
+
+function render() {
+  const root = document.getElementById('root');
+  if (editId !== null) { root.innerHTML = ''; root.appendChild(buildEditModal()); return; }
+  if (view === 'rollover') { root.innerHTML = ''; root.appendChild(buildRollover()); return; }
+  if (view === 'detail') { root.innerHTML = ''; root.appendChild(buildDetail()); return; }
+  root.innerHTML = ''; root.appendChild(buildMain());
+}
+
+function buildMain() {
+  const { year: y, month: m } = state;
+  const md = monthData(y, m);
+  const totalBudget = state.envelopes.reduce((s, e) => s + e.limit, 0);
+  let totalSpent = 0;
+  state.envelopes.forEach(e => { totalSpent += spent(md[e.id] || {transactions:[],extra:0}); });
+  const left = totalBudget - totalSpent;
+
+  const now = new Date();
+  const isCurrent = y === now.getFullYear() && m === now.getMonth();
+  const isFirst = now.getDate() === 1 && isCurrent;
+
+  const wrap = el('div', {class:'app'});
+
+  const topbar = el('div', {class:'topbar'});
+  topbar.innerHTML = `<span class="topbar-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Sobres</span>`;
+  const addBtn = el('button', {class:'icon-btn', 'aria-label':'Nuevo sobre'}, '+');
+  addBtn.onclick = () => { editId = '__new__'; render(); };
+  topbar.appendChild(addBtn);
+  wrap.appendChild(topbar);
+
+  if (isFirst) {
+    const alert = el('div', {class:'alert-bar'});
+    alert.innerHTML = `<span>Es 1 de mes — ¿cerrar ${MONTHS_ES[m]}?</span>`;
+    const closeBtn = el('button', {}, 'Cerrar mes');
+    closeBtn.onclick = () => { rolloverChoices = {}; view = 'rollover'; render(); };
+    alert.appendChild(closeBtn);
+    wrap.appendChild(alert);
+  }
+
+  const nav = el('div', {class:'month-nav'});
+  const prev = el('button', {class:'icon-btn', 'aria-label':'Mes anterior'}, '‹');
+  prev.onclick = () => { state.month--; if (state.month < 0) { state.month = 11; state.year--; } save(); render(); };
+  const next = el('button', {class:'icon-btn', 'aria-label':'Mes siguiente'}, '›');
+  next.onclick = () => { state.month++; if (state.month > 11) { state.month = 0; state.year++; } save(); render(); };
+  const lbl = el('span', {class:'month-label'}, `${MONTHS_ES[m]} ${y}`);
+  nav.appendChild(prev); nav.appendChild(lbl); nav.appendChild(next);
+  wrap.appendChild(nav);
+
+  const summary = el('div', {class:'summary'});
+  summary.appendChild(sumCard('Presupuesto', fmt(totalBudget), ''));
+  summary.appendChild(sumCard('Gastado', fmt(totalSpent), totalSpent > totalBudget ? 'danger' : ''));
+  summary.appendChild(sumCard('Disponible', fmt(left), left < 0 ? 'danger' : 'success'));
+  wrap.appendChild(summary);
+
+  const envs = el('div', {class:'envelopes'});
+  state.envelopes.forEach(e => {
+    const ed = md[e.id] || {transactions:[], extra:0};
+    const s = spent(ed);
+    const effectiveLimit = e.limit + (ed.extra || 0);
+    const pct = effectiveLimit > 0 ? Math.min(100, (s / effectiveLimit) * 100) : 0;
+    const leftAmt = effectiveLimit - s;
+    const over = leftAmt < 0;
+
+    const card = el('div', {class:'envelope'});
+    card.innerHTML = `
+      <div class="env-header">
+        <span class="env-name">${e.name}</span>
+        <span class="env-amounts">${fmt(s)} <strong>/ ${fmt(effectiveLimit)}</strong></span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor(pct,e.color)}"></div></div>
+      <div class="env-footer">
+        <span class="${over ? 'over' : ''}">${over ? 'Pasado por ' + fmt(Math.abs(leftAmt)) : fmt(leftAmt) + ' disponible'}</span>
+        <span>${(ed.transactions||[]).length} gastos</span>
+      </div>`;
+    card.onclick = () => { activeId = e.id; view = 'detail'; render(); };
+    envs.appendChild(card);
+  });
+  wrap.appendChild(envs);
+  return wrap;
+}
+
+function buildDetail() {
+  const { year: y, month: m } = state;
+  const env = state.envelopes.find(e => e.id === activeId);
+  if (!env) { view = 'main'; return buildMain(); }
+  const md = monthData(y, m);
+  const ed = md[env.id] || {transactions:[], extra:0};
+  const s = spent(ed);
+  const effectiveLimit = env.limit + (ed.extra || 0);
+  const pct = effectiveLimit > 0 ? Math.min(100, (s / effectiveLimit) * 100) : 0;
+  const leftAmt = effectiveLimit - s;
+  const over = leftAmt < 0;
+
+  const wrap = el('div', {class:'detail-view'});
+
+  const backRow = el('div', {class:'back-row'}, '← Volver');
+  backRow.onclick = () => { view = 'main'; render(); };
+  wrap.appendChild(backRow);
+
+  const dh = el('div', {class:'detail-header'});
+  const dhr = el('div', {class:'detail-header-row'});
+  const dn = el('div', {class:'detail-name'}, env.name);
+  const editBtn = el('button', {class:'icon-btn', 'aria-label':'Editar'}, '⚙');
+  editBtn.style.cssText = 'font-size:18px;border:none;';
+  editBtn.onclick = () => { editId = env.id; render(); };
+  dhr.appendChild(dn); dhr.appendChild(editBtn);
+  dh.appendChild(dhr);
+  dh.appendChild(el('div', {class:'detail-sub'}, `${MONTHS_ES[m]} ${y}`));
+  wrap.appendChild(dh);
+
+  const barWrap = el('div', {class:'detail-bar-wrap'});
+  barWrap.innerHTML = `
+    <div class="detail-bar-track"><div class="detail-bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor(pct,env.color)}"></div></div>
+    <div class="detail-bar-labels"><span>${fmt(s)} gastado</span><span style="${over?'color:var(--text-danger)':''}">${over ? 'Pasado ' + fmt(Math.abs(leftAmt)) : fmt(leftAmt) + ' libre'}</span></div>`;
+  wrap.appendChild(barWrap);
+
+  const form = el('div', {class:'add-form'});
+  form.innerHTML = `<div class="add-form-title">Añadir gasto</div>`;
+  const row = el('div', {class:'add-row'});
+  const conceptInput = el('input', {type:'text', placeholder:'Concepto', maxlength:'40'});
+  const amountInput = el('input', {type:'number', placeholder:'0.00', min:'0', step:'0.01'});
+  amountInput.style.width = '95px';
+  const addBtn = el('button', {}, '+');
+  const doAdd = () => {
+    const concept = conceptInput.value.trim();
+    const amount = parseFloat(amountInput.value);
+    if (!concept || isNaN(amount) || amount <= 0) return;
+    const mdata = monthData(y, m);
+    if (!mdata[env.id]) mdata[env.id] = {transactions:[], extra:0};
+    mdata[env.id].transactions.push({id: Date.now(), concept, amount: Math.round(amount*100)/100});
+    conceptInput.value = ''; amountInput.value = '';
+    save(); render();
+  };
+  addBtn.onclick = doAdd;
+  conceptInput.addEventListener('keydown', e => { if (e.key === 'Enter') amountInput.focus(); });
+  amountInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
+  row.appendChild(conceptInput); row.appendChild(amountInput); row.appendChild(addBtn);
+  form.appendChild(row);
+  wrap.appendChild(form);
+
+  const txnList = el('div', {class:'txn-list'});
+  txnList.appendChild(el('div', {class:'txn-title'}, 'Gastos'));
+  const txns = [...(ed.transactions || [])].reverse();
+  if (!txns.length) {
+    txnList.appendChild(el('div', {class:'empty-state'}, 'Sin gastos registrados'));
+  } else {
+    txns.forEach(t => {
+      const item = el('div', {class:'txn-item'});
+      const right = el('div', {class:'txn-right'});
+      const delBtn = el('button', {class:'txn-del', 'aria-label':'Eliminar'}, '×');
+      delBtn.onclick = () => {
+        const mdata = monthData(y, m);
+        mdata[env.id].transactions = mdata[env.id].transactions.filter(x => x.id !== t.id);
+        save(); render();
+      };
+      right.appendChild(el('span', {class:'txn-amount'}, fmt(t.amount)));
+      right.appendChild(delBtn);
+      item.appendChild(el('span', {class:'txn-concept'}, t.concept));
+      item.appendChild(right);
+      txnList.appendChild(item);
+    });
+  }
+  wrap.appendChild(txnList);
+  return wrap;
+}
+
+function buildEditModal() {
+  const isNew = editId === '__new__';
+  const env = isNew ? {name:'', limit:''} : state.envelopes.find(e => e.id === editId);
+  const overlay = el('div', {class:'modal-overlay'});
+  const modal = el('div', {class:'modal'});
+  modal.innerHTML = `
+    <div class="modal-title">${isNew ? 'Nuevo sobre' : 'Editar sobre'}</div>
+    <label>Nombre</label>
+    <input type="text" id="edit-name" value="${env ? env.name : ''}" placeholder="Ej: Alimentación" maxlength="30">
+    <label>Límite mensual (€)</label>
+    <input type="number" id="edit-limit" value="${env ? env.limit : ''}" min="0" step="1" placeholder="0">`;
+  const actions = el('div', {class:'modal-actions'});
+  if (!isNew) {
+    const delBtn = el('button', {class:'btn-danger'}, 'Eliminar');
+    delBtn.onclick = () => {
+      if (confirm(`¿Eliminar "${env.name}"? Se borrarán todos sus datos.`)) {
+        state.envelopes = state.envelopes.filter(e => e.id !== editId);
+        editId = null; save(); render();
+      }
+    };
+    actions.appendChild(delBtn);
+  }
+  const cancelBtn = el('button', {}, 'Cancelar');
+  cancelBtn.onclick = () => { editId = null; render(); };
+  const saveBtn = el('button', {}, isNew ? 'Crear' : 'Guardar');
+  saveBtn.onclick = () => {
+    const name = document.getElementById('edit-name').value.trim();
+    const limit = parseFloat(document.getElementById('edit-limit').value);
+    if (!name || isNaN(limit) || limit < 0) return;
+    if (isNew) {
+      const id = 'env_' + Date.now();
+      state.envelopes.push({id, name, limit: Math.round(limit), color:'#7F77DD'});
+    } else {
+      const e = state.envelopes.find(e => e.id === editId);
+      if (e) { e.name = name; e.limit = Math.round(limit); }
+    }
+    editId = null; save(); render();
+  };
+  actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+  modal.appendChild(actions);
+  overlay.appendChild(modal);
+  overlay.onclick = e => { if (e.target === overlay) { editId = null; render(); } };
+  return overlay;
+}
+
+function buildRollover() {
+  const { year: y, month: m } = state;
+  const md = monthData(y, m);
+
+  const wrap = el('div', {class:'app'});
+  wrap.appendChild(el('div', {class:'topbar', style:'justify-content:center'}).appendChild(document.createTextNode('')));
+  const topbar = el('div', {class:'topbar'});
+  topbar.appendChild(el('span', {style:'font-size:18px;font-weight:600'}, `Cerrar ${MONTHS_ES[m]}`));
+  wrap.appendChild(topbar);
+  wrap.appendChild(el('div', {style:'padding:8px 16px 12px;font-size:13px;color:var(--text2)'}, '¿Qué hacemos con el sobrante de cada sobre?'));
+
+  const list = el('div', {style:'padding:0 16px'});
+  state.envelopes.forEach(e => {
+    const ed = md[e.id] || {transactions:[], extra:0};
+    const s = spent(ed);
+    const surplus = Math.round(((e.limit + (ed.extra||0)) - s) * 100) / 100;
+    const item = el('div', {class:'rollover-item'});
+    const info = el('div');
+    info.appendChild(el('div', {class:'rollover-name'}, e.name));
+    const surplusEl = el('div', {class:'rollover-surplus ' + (surplus >= 0 ? 'pos' : 'neg')});
+    surplusEl.style.color = surplus >= 0 ? 'var(--text-success)' : 'var(--text-danger)';
+    surplusEl.textContent = surplus >= 0 ? '+' + fmt(surplus) + ' sobrante' : fmt(Math.abs(surplus)) + ' en rojo';
+    info.appendChild(surplusEl);
+    const btns = el('div', {class:'rollover-btns'});
+    const resetBtn = el('button', {}, 'Resetear');
+    const carryBtn = el('button', {}, 'Acumular');
+    const update = () => {
+      resetBtn.className = rolloverChoices[e.id] === 'reset' ? 'btn-selected' : '';
+      carryBtn.className = rolloverChoices[e.id] === 'carry' ? 'btn-selected' : '';
+      checkConfirm();
+    };
+    resetBtn.onclick = () => { rolloverChoices[e.id] = 'reset'; update(); };
+    carryBtn.onclick = () => { rolloverChoices[e.id] = 'carry'; update(); };
+    btns.appendChild(resetBtn); btns.appendChild(carryBtn);
+    item.appendChild(info); item.appendChild(btns);
+    list.appendChild(item);
+    update();
+  });
+  wrap.appendChild(list);
+
+  const actions = el('div', {style:'display:flex;gap:8px;padding:16px'});
+  const cancelBtn = el('button', {style:'flex:1'}, 'Cancelar');
+  cancelBtn.onclick = () => { view = 'main'; render(); };
+  const confirmBtn = el('button', {id:'confirm-rollover', style:'flex:1'}, 'Confirmar');
+  confirmBtn.disabled = true;
+  confirmBtn.onclick = () => {
+    let nm = m + 1, ny = y;
+    if (nm > 11) { nm = 0; ny++; }
+    const nk = mkey(ny, nm);
+    state.months[nk] = {};
+    state.envelopes.forEach(e => {
+      const ed = md[e.id] || {transactions:[], extra:0};
+      const s = spent(ed);
+      const surplus = (e.limit + (ed.extra||0)) - s;
+      const extra = rolloverChoices[e.id] === 'carry' ? Math.round(surplus*100)/100 : 0;
+      state.months[nk][e.id] = {transactions:[], extra};
+    });
+    state.month = nm; state.year = ny;
+    view = 'main'; rolloverChoices = {};
+    save(); render();
+  };
+  actions.appendChild(cancelBtn); actions.appendChild(confirmBtn);
+  wrap.appendChild(actions);
+
+  function checkConfirm() {
+    const btn = document.getElementById('confirm-rollover');
+    if (btn) btn.disabled = !state.envelopes.every(e => rolloverChoices[e.id]);
+  }
+  return wrap;
+}
+
+function sumCard(label, val, cls) {
+  const c = el('div', {class:'sum-card'});
+  c.appendChild(el('div', {class:'sum-label'}, label));
+  c.appendChild(el('div', {class:`sum-val ${cls}`}, val));
+  return c;
+}
+
+function el(tag, attrs={}, text) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => { if (k === 'class') e.className = v; else e.setAttribute(k, v); });
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+render();
+</script>
+</body>
+</html>
